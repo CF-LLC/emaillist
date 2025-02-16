@@ -3,7 +3,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  basePath: "/emaillist.github.io",
+  basePath: "/emaillist",
 }
 
 module.exports = nextConfig
