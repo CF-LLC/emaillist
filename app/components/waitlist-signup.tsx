@@ -32,7 +32,7 @@ export function WaitlistSignup() {
         </div>
         <div>
           <p className="text-lg sm:text-xl mb-8 text-gray-300">
-            Be part of something truly extraordinary. Join thousands of others already gaining early access to our
+            Be part of something truly extraordinary. Join others already gaining early access to our
             revolutionary new product.
           </p>
         </div>
