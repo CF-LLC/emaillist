@@ -2,13 +2,19 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [gh-pages]
+    branches: [main]
 
+# Grant GITHUB_TOKEN the permissions required to make a Pages deployment
 permissions:
-  contents: write
+  pages: write      # to deploy to Pages
+  id-token: write   # to verify the deployment originates from an appropriate source
+  contents: write   # to write to the repository
 
 jobs:
   build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
 
     steps:
@@ -31,9 +37,15 @@ jobs:
           NEXT_PUBLIC_UPSTASH_REDIS_REST_URL: ${{ secrets.NEXT_PUBLIC_UPSTASH_REDIS_REST_URL }}
           NEXT_PUBLIC_UPSTASH_REDIS_REST_TOKEN: ${{ secrets.NEXT_PUBLIC_UPSTASH_REDIS_REST_TOKEN }}
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./out
+          path: './out'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
 

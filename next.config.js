@@ -4,7 +4,10 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  basePath: process.env.NODE_ENV === "production" ? "/emaillist" : "",
+  // Make sure this matches your repository name EXACTLY
+  basePath: "/emaillist",
+  // Add this to disable trailing slashes
+  trailingSlash: false,
 }
 
 module.exports = nextConfig
