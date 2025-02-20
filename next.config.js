@@ -4,7 +4,9 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  basePath: process.env.NODE_ENV === "production" ? "/emaillist" : "",
+  // Update basePath to match your repository name
+  basePath: "/emaillist",
+  assetPrefix: "/emaillist/",
 }
 
 module.exports = nextConfig
