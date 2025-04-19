@@ -3,7 +3,7 @@
 import { z } from 'zod'
 import { Resend } from 'resend'
 import { EmailTemplate } from '../components/email-template'
-import { redis } from '../lib/redis'
+import { redis } from '../../lib/redis'
 
 const schema = z.object({
   email: z.string().email('Invalid email address'),
