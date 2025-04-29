@@ -66,7 +66,7 @@ export function WaitlistForm({ onSuccess }: WaitlistFormProps) {
         <Button
           type="submit"
           disabled={isPending}
-          className="bg-black hover:bg-gray-800 text-white font-semibold px-4 rounded-xl transition-all duration-300 ease-in-out focus:outline-none w-[120px] submit-button"
+          className="ml-auto bg-black hover:bg-gray-800 text-white font-semibold px-4 rounded-xl transition-all duration-300 ease-in-out focus:outline-none w-[120px]"
         >
           {isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "Get Notified"}
         </Button>

@@ -57,8 +57,3 @@
     @apply bg-background text-foreground;
   }
 }
-
-
-.submit-button{
-  float: right;
-}
