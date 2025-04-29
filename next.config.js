@@ -6,6 +6,7 @@ const nextConfig = {
   },
   basePath: "/emaillist",
   assetPrefix: "/emaillist/",
+  output: "export", // Enable static export
 };
 
 module.exports = nextConfig;
