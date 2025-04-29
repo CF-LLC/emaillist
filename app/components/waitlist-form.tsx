@@ -41,16 +41,13 @@ export function WaitlistForm({ onSuccess }: WaitlistFormProps) {
   }, [formState, toast, onSuccess])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const formData = new FormData()
-    formData.append("email", email)
-
+    e.preventDefault();
+  
     startTransition(async () => {
-      // Pass null as the first argument (prevState)
-      const result = await joinWaitlist(null, formData)
-      setFormState(result)
-    })
-  }
+      const result = await joinWaitlist(email); // Pass the email string directly
+      setFormState(result);
+    });
+  };
 
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-4 mb-8">

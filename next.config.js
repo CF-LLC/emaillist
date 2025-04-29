@@ -6,7 +6,6 @@ const nextConfig = {
   },
   basePath: "/emaillist",
   assetPrefix: "/emaillist/",
-  output: "export",
 };
 
 module.exports = nextConfig;
