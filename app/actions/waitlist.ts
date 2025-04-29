@@ -1,6 +1,6 @@
 export async function joinWaitlist(email: string): Promise<{ success: boolean; message: string; count?: number }> {
   try {
-    const response = await fetch('/api/joinWaitlist', {
+    const response = await fetch('/emaillist/pages/api/joinWaitlist', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
@@ -16,9 +16,7 @@ export async function joinWaitlist(email: string): Promise<{ success: boolean; m
 
 export async function getWaitlistCount(): Promise<number> {
   try {
-    const response = await fetch('/api/waitlistCount', {
-      method: 'GET',
-    });
+    const response = await fetch('/emaillist/pages/api/waitlistCount', { method: 'GET' });
 
     if (!response.ok) {
       throw new Error('Failed to fetch waitlist count');
