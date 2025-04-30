@@ -1,76 +1,83 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState, useEffect, useTransition } from "react"
-import { joinWaitlist } from "../actions/waitlist"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Loader2 } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import React, { useState, useEffect } from "react";
 
 interface WaitlistFormProps {
-  onSuccess: (count: number) => void
+  onSuccess: (count: number) => void;
 }
 
 export function WaitlistForm({ onSuccess }: WaitlistFormProps) {
-  const [isPending, startTransition] = useTransition()
-  const [formState, setFormState] = useState<any>(null)
-  const [email, setEmail] = useState("")
-  const { toast } = useToast()
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (formState?.success) {
-      toast({
-        title: "Success!",
-        description: formState.message,
-        duration: 5000,
-      })
-      if (formState.count) {
-        onSuccess(formState.count)
-      }
-      setEmail("")
-    } else if (formState?.success === false) {
-      toast({
-        title: "Error",
-        description: formState.message,
-        variant: "destructive",
-        duration: 5000,
-      })
-    }
-  }, [formState, toast, onSuccess])
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
-    startTransition(async () => {
-      const result = await joinWaitlist(email); // Pass the email string directly
-      setFormState(result);
-    });
+    setLoading(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_UPSTASH_REDIS_REST_URL}/sadd/waitlist_emails/${email}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_UPSTASH_REDIS_REST_TOKEN}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to add email to waitlist");
+      }
+
+      setMessage("Successfully added to the waitlist!");
+      setEmail("");
+
+      // Fetch the updated waitlist count
+      const countResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_UPSTASH_REDIS_REST_URL}/scard/waitlist_emails`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_UPSTASH_REDIS_REST_TOKEN}`,
+          },
+        }
+      );
+
+      if (countResponse.ok) {
+        const countData = await countResponse.json();
+        onSuccess(countData.result || 0); // Call the onSuccess callback with the updated count
+      }
+    } catch (error) {
+      console.error("Error adding email to waitlist:", error);
+      setMessage("Failed to add email. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-4 mb-8">
-      <div className="flex overflow-hidden rounded-xl bg-white/5 p-1 ring-1 ring-white/20 focus-within:ring-2 focus-within:ring-blue-500">
-      <Input
-        id="email"
-        name="email"
-        type="email"
-        placeholder="Enter your email"
-        required
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        aria-describedby="email-error"
-        className="w-full border-0 bg-transparent text-white placeholder:text-gray-400 focus:ring-0 focus:border-transparent focus-visible:border-transparent focus:outline-none active:ring-0 active:outline-none focus-visible:ring-0 focus-visible:outline-none active:border-transparent focus-visible:ring-offset-0"
-      />
-        <Button
+    <div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <input
+          type="email"
+          placeholder="Enter your email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          className="border p-2 rounded w-full"
+        />
+        <button
           type="submit"
-          disabled={isPending}
-          className="ml-auto bg-black hover:bg-gray-800 text-white font-semibold px-4 rounded-xl transition-all duration-300 ease-in-out focus:outline-none w-[120px]"
+          disabled={loading}
+          className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
         >
-          {isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "Get Notified"}
-        </Button>
-      </div>
-    </form>
-  )
+          {loading ? "Submitting..." : "Join Waitlist"}
+        </button>
+      </form>
+      {message && <p className="mt-2">{message}</p>}
+    </div>
+  );
 }
