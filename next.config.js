@@ -1,4 +1,3 @@
-// filepath: /Users/cooperfeatherstone/Documents/github/emaillist/next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {

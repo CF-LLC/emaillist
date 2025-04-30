@@ -7,9 +7,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Get the count of emails in the Redis set
     const count = await redis.scard('waitlist_emails');
-
     return res.status(200).json({ success: true, count });
   } catch (error) {
     console.error('Error fetching waitlist count:', error);

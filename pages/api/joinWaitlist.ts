@@ -1,8 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { z } from 'zod';
-import { Resend } from 'resend';
 import { redis } from '../../lib/redis';
-import { EmailTemplate } from '../../app/components/email-template';
 
 const schema = z.object({
   email: z.string().email('Invalid email address'),
@@ -28,20 +26,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Store email in Upstash Redis
     await redis.sadd('waitlist_emails', email);
-
-    // Send welcome email using Resend
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const { error } = await resend.emails.send({
-      from: 'Acme <cooperfeatherstonellc@gmail.com>',
-      to: email,
-      subject: 'Welcome to Our Waitlist!',
-      html: EmailTemplate({ email }),
-    });
-
-    if (error) {
-      console.error('Error sending email:', error);
-      return res.status(500).json({ success: false, message: 'Failed to send email' });
-    }
 
     return res.status(200).json({ success: true, message: 'Successfully joined the waitlist' });
   } catch (err) {
