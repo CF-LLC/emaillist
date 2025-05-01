@@ -1,14 +1,24 @@
 export async function joinWaitlist(email: string): Promise<{ success: boolean; message: string }> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_UPSTASH_REDIS_REST_URL}/sadd/waitlist_emails/${email}`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_UPSTASH_REDIS_REST_TOKEN}`,
-      },
-    });
+    // Ensure the email is valid before making the request
+    if (!email || !email.includes('@')) {
+      throw new Error('Invalid email address');
+    }
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_UPSTASH_REDIS_REST_URL}/sadd/waitlist_emails/${encodeURIComponent(email)}`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_UPSTASH_REDIS_REST_TOKEN}`,
+        },
+      }
+    );
 
     if (!response.ok) {
-      throw new Error('Failed to add email to waitlist');
+      const errorData = await response.json();
+      console.error('Error response from Upstash (sadd):', errorData);
+      throw new Error(errorData.error || 'Failed to add email to waitlist');
     }
 
     return { success: true, message: 'Successfully joined the waitlist' };
@@ -20,15 +30,20 @@ export async function joinWaitlist(email: string): Promise<{ success: boolean; m
 
 export async function getWaitlistCount(): Promise<number> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_UPSTASH_REDIS_REST_URL}/scard/waitlist_emails`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_UPSTASH_REDIS_REST_TOKEN}`,
-      },
-    });
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_UPSTASH_REDIS_REST_URL}/scard/waitlist_emails`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_UPSTASH_REDIS_REST_TOKEN}`,
+        },
+      }
+    );
 
     if (!response.ok) {
-      throw new Error('Failed to fetch waitlist count');
+      const errorData = await response.json();
+      console.error('Error response from Upstash (scard):', errorData);
+      throw new Error(errorData.error || 'Failed to fetch waitlist count');
     }
 
     const data = await response.json();
