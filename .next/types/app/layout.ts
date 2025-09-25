@@ -1,4 +1,4 @@
-// File: /Users/cooperfeatherstone/Documents/github/emaillist/app/layout.tsx
+// File: /home/runner/work/emaillist/emaillist/app/layout.tsx
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
