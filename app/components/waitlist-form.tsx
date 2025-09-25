@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { joinWaitlist } from "@/app/actions/waitlist";
 
 interface WaitlistFormProps {
   onSuccess: (count: number) => void;
@@ -10,49 +11,33 @@ export function WaitlistForm({ onSuccess }: WaitlistFormProps) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [isError, setIsError] = useState(false);
 
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
+    setIsError(false);
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_UPSTASH_REDIS_REST_URL}/sadd/waitlist_emails/${email}`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_UPSTASH_REDIS_REST_TOKEN}`,
-          },
+      const result = await joinWaitlist(email);
+      
+      setMessage(result.message);
+      setIsError(!result.success);
+      
+      if (result.success) {
+        setEmail("");
+        // Trigger a recount for the parent component
+        const response = await fetch('/api/waitlist/count');
+        if (response.ok) {
+          const data = await response.json();
+          onSuccess(data.count || 0);
         }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to add email to waitlist");
-      }
-
-      setMessage("Successfully added to the waitlist!");
-      setEmail("");
-
-      // Fetch the updated waitlist count
-      const countResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_UPSTASH_REDIS_REST_URL}/scard/waitlist_emails`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_UPSTASH_REDIS_REST_TOKEN}`,
-          },
-        }
-      );
-
-      if (countResponse.ok) {
-        const countData = await countResponse.json();
-        onSuccess(countData.result || 0); // Call the onSuccess callback with the updated count
       }
     } catch (error) {
-      console.error("Error adding email to waitlist:", error);
-      setMessage("Failed to add email. Please try again.");
+      console.error("Error joining waitlist:", error);
+      setMessage("An unexpected error occurred. Please try again.");
+      setIsError(true);
     } finally {
       setLoading(false);
     }
@@ -61,23 +46,53 @@ export function WaitlistForm({ onSuccess }: WaitlistFormProps) {
   return (
     <div>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="email"
-          placeholder="Enter your email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="border p-2 rounded w-full"
-        />
+        <div>
+          <input
+            type="email"
+            placeholder="Enter your email address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            disabled={loading}
+            className={`w-full p-3 rounded-lg border-2 transition-colors ${
+              isError 
+                ? 'border-red-300 focus:border-red-500' 
+                : 'border-gray-300 focus:border-blue-500'
+            } focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed`}
+            autoComplete="email"
+          />
+        </div>
         <button
           type="submit"
-          disabled={loading}
-          className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
+          disabled={loading || !email.trim()}
+          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 
+                   text-white font-semibold px-6 py-3 rounded-lg 
+                   transition-colors disabled:cursor-not-allowed
+                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
-          {loading ? "Submitting..." : "Join Waitlist"}
+          {loading ? (
+            <span className="flex items-center justify-center">
+              <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Joining...
+            </span>
+          ) : (
+            "Join Waitlist"
+          )}
         </button>
       </form>
-      {message && <p className="mt-2">{message}</p>}
+      
+      {message && (
+        <div className={`mt-4 p-3 rounded-lg ${
+          isError 
+            ? 'bg-red-50 text-red-700 border border-red-200' 
+            : 'bg-green-50 text-green-700 border border-green-200'
+        }`}>
+          <p className="text-sm font-medium">{message}</p>
+        </div>
+      )}
     </div>
   );
 }
